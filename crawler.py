@@ -20,16 +20,17 @@ class WebCrawlerParser(HTMLParser):
                   return v
         return None
 
-    def _is_internal(self, url):
+    def _is_internal_link(self, url):
         parsed_url = urlparse(url) 
-        return parsed_url.netloc == self.domain or parsed_url.netloc == ''
+        is_same_domain = (parsed_url.netloc == self.domain or parsed_url.netloc == '')
+        return is_same_domain
 
     def handle_starttag(self, tag, attrs):
         if tag == 'a':
             href = self._get_attr(attrs, 'href')
             if href is None:
                 return
-            if self._is_internal(href):
+            if self._is_internal_link(href):
                 self.internal_urls.add(href)
             else: 
                 self.external_urls.add(href)
