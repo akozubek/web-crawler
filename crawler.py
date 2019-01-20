@@ -21,7 +21,10 @@ class WebCrawlerParser(HTMLParser):
     def _get_attr(self, attrs, name):
         for n, v in attrs:
              if n == name:
-                  return v
+                  if v.startswith('\\\'') and v.endswith('\\\''):
+                     return v.replace('\\\'', '').replace('\\\'','')	
+                  else: 
+                     return v
         return None
 
     def _is_internal_link(self, url):
