@@ -1,5 +1,9 @@
 import urllib.request
 from urllib.parse import urlparse
+from urllib.parse import urlunparse
+from urllib.parse import urlunsplit
+from urllib.parse import urljoin
+from urllib.parse import ParseResult
 import sys
 from html.parser import HTMLParser
 from collections import namedtuple
@@ -60,6 +64,45 @@ def print_info(header, items):
     for element in sorted(items):
         print('\t', element)
 
+def standardize_url(url, domain):
+    parsed_url = urlparse(url)
+    # Relative URL -> convert to absolute
+    if parsed_url.netloc == '':
+        url = urljoin('http://'+domain, url)
+        parsed_url = urlparse(url)
+
+    path = parsed_url.path
+    if path == '' or not parsed_url.path.endswith('/'):
+        path = path + '/'
+
+    # https: change to http
+    url = urlunsplit(('http', parsed_url.netloc, path, '', ''))
+    return url
+
+def is_link(url):
+    parsed_url = urlparse(url)
+    return parsed_url.scheme in ('http', 'https')
+
+
+def crawl_website(starting_url, domain, websites, current_depth, max_depth = 0):
+    print('Downloading', starting_url)
+    page = download(starting_url)
+
+    parser = WebCrawlerParser(domain)
+    parser.feed(str(page))
+    website_info = parser.get_website_info()
+    websites[starting_url] = website_info
+    #print_info('Internal URLs: ', website_info.internal_urls)
+    #print_info('External URLs: ', website_info.external_urls)
+    #print_info('Images: ', website_info.images)
+   
+    if current_depth < max_depth:
+        for internal_url in website_info.internal_urls:
+            standard_url = standardize_url(internal_url, domain)
+            if is_link(standard_url) and standard_url not in websites.keys():
+                crawl_website(standard_url, domain, websites, current_depth+1, max_depth)
+
+
 def main(): 
     if len(sys.argv) <= 1:
         usage()
@@ -67,17 +110,11 @@ def main():
 
     # Arguments provided -> continue with download 
     url = sys.argv[1]
-    print('Downloading', url)
-
-    page = download(url)
-    print('Parsing downloaded page')
     domain = urlparse(url).netloc
-    parser = WebCrawlerParser(domain)
-    parser.feed(str(page))
-    website_info = parser.get_website_info()
-    print_info('Internal URLs: ', website_info.internal_urls)
-    print_info('External URLs: ', website_info.external_urls)
-    print_info('Images: ', website_info.images)
+    websites = dict()
+    url = standardize_url(url, domain)
+    crawl_website(url, domain, websites, 0, 1)
+
 
 if __name__ == "__main__":
     main()

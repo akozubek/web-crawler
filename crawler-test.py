@@ -1,5 +1,6 @@
 import unittest
 from crawler import WebCrawlerParser
+from crawler import standardize_url
 
 class TestWebCrawlerParser(unittest.TestCase):
     def setUp(self):
@@ -40,6 +41,32 @@ class TestWebCrawlerParser(unittest.TestCase):
 
     def test_is_internal_other_protocols(self):
         self.assertTrue(self.parser._is_internal_link('mailto:contact@google.com'))
+
+class TestStandadizeUrl(unittest.TestCase):
+    def test_standardize(self):
+        self.assertEqual(standardize_url('http://google.com', 'google.com'), 'http://google.com/')
+
+    def test_standardize_https(self):
+        self.assertEqual(standardize_url('https://google.com/', 'google.com'), 'http://google.com/')
+
+    def test_standardize_fragment(self):
+        self.assertEqual(standardize_url('#who-we-are', 'google.com'), 'http://google.com/')
+
+    def test_standardize_fragment_2(self):
+        self.assertEqual(standardize_url('http://google.com/#who-we-are', 'google.com'), 'http://google.com/')
+
+    def test_standardize_relative(self):
+        self.assertEqual(standardize_url('/privacy/policy', 'google.com'), 'http://google.com/privacy/policy/')
+
+    def test_standardize_path(self):
+        self.assertEqual(standardize_url('http://google.com/privacy/policy', 'google.com'), 'http://google.com/privacy/policy/')
+
+    def test_standardize_path_2(self):
+        self.assertEqual(standardize_url('http://google.com/privacy/policy/', 'google.com'), 'http://google.com/privacy/policy/')
+
+    def test_standardize_query(self):
+        self.assertEqual(standardize_url('http://google.com/?s=&post_type[]=news', 'google.com'), 'http://google.com/')
+
 
 if __name__ == '__main__':
     unittest.main()
