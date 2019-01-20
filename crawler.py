@@ -2,6 +2,9 @@ import urllib.request
 from urllib.parse import urlparse
 import sys
 from html.parser import HTMLParser
+from collections import namedtuple
+
+WebsiteInfo = namedtuple('WebsiteInfo', ['internal_urls', 'external_urls', 'images'])
 
 class WebCrawlerParser(HTMLParser):
     def __init__(self, domain):
@@ -36,14 +39,8 @@ class WebCrawlerParser(HTMLParser):
                 return
             self.images.add(src)
 
-    def get_images(self):
-        return self.images
-
-    def get_external_urls(self):
-        return self.external_urls
-
-    def get_internal_urls(self):
-        return self.internal_urls
+    def get_website_info(self):
+        return WebsiteInfo(self.internal_urls, self.external_urls, self.images)
 
 def usage():
     print('Usage: python3 crawler.py starting-url')
@@ -76,9 +73,10 @@ def main():
     domain = urlparse(url).netloc
     parser = WebCrawlerParser(domain)
     parser.feed(str(page))
-    print_info('Internal URLs: ', parser.get_internal_urls())
-    print_info('External URLs: ', parser.get_external_urls())
-    print_info('Images: ', parser.get_images())
+    website_info = parser.get_website_info()
+    print_info('Internal URLs: ', website_info.internal_urls)
+    print_info('External URLs: ', website_info.external_urls)
+    print_info('Images: ', website_info.images)
 
 if __name__ == "__main__":
     main()
