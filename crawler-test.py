@@ -42,6 +42,9 @@ class TestWebCrawlerParser(unittest.TestCase):
     def test_is_internal_other_protocols(self):
         self.assertTrue(self.parser._is_internal_link('mailto:contact@google.com'))
 
+    def test_get_attr(self):
+        self.assertEqual(self.parser._get_attr([('href',"\\\'https://google.com/tag/brand-strategy/\\\'")], 'href'), 'https://google.com/tag/brand-strategy/') 
+
 class TestStandadizeUrl(unittest.TestCase):
     def test_standardize(self):
         self.assertEqual(standardize_url('http://google.com', 'google.com'), 'http://google.com/')

@@ -54,13 +54,8 @@ def usage():
     print('Usage: python3 crawler.py starting-url max-depth')
 
 def download(url):
-    try: 
-        response = urllib.request.urlopen(url)
-    except Exception as e:
-        print('Downloading from url', url, 'failed. Details:', str(e))
-        exit(1)
-    data = response.read()
-    return data
+    response = urllib.request.urlopen(url)
+    return response.read()
 
 def print_website_single_info(header, items):
     print('\t', header)
@@ -99,7 +94,11 @@ def is_link(url):
 
 def crawl_website(starting_url, domain, websites, current_depth, max_depth = 0):
     print('Downloading', starting_url)
-    page = download(starting_url)
+    try: 
+        page = download(starting_url)
+    except Exception as e:
+        print('Downloading from url', starting_url, 'failed. Details:', str(e), file=sys.stderr)
+        return 
 
     parser = WebCrawlerParser(domain)
     parser.feed(str(page))
