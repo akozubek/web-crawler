@@ -1,12 +1,15 @@
 import urllib.request
+from urllib.parse import urlparse
 import sys
 from html.parser import HTMLParser
 
 class WebCrawlerParser(HTMLParser):
-    def __init__(self):
+    def __init__(self, domain):
         HTMLParser.__init__(self) 
+        self.domain = domain
+        self.external_urls = set()
+        self.internal_urls = set()
         self.images = set()
-        self.urls = set()
     
     def _get_attr(self, attrs, name):
         for n, v in attrs:
@@ -14,19 +17,33 @@ class WebCrawlerParser(HTMLParser):
                   return v
         return None
 
+    def _is_internal(self, url):
+        parsed_url = urlparse(url) 
+        return parsed_url.netloc == self.domain or parsed_url.netloc == ''
+
     def handle_starttag(self, tag, attrs):
         if tag == 'a':
             href = self._get_attr(attrs, 'href')
-            self.urls.add(href)
+            if href is None:
+                return
+            if self._is_internal(href):
+                self.internal_urls.add(href)
+            else: 
+                self.external_urls.add(href)
         if tag == 'img':
             src = self._get_attr(attrs, 'src')
+            if src is None:
+                return
             self.images.add(src)
 
     def get_images(self):
         return self.images
 
-    def get_urls(self):
-        return self.urls
+    def get_external_urls(self):
+        return self.external_urls
+
+    def get_internal_urls(self):
+        return self.internal_urls
 
 def usage():
     print('Usage: python3 crawler.py starting-url')
@@ -49,11 +66,14 @@ def main():
     # Arguments provided -> continue with download 
     url = sys.argv[1]
     print('Downloading', url)
+
     page = download(url)
     print('Parsing downloaded page')
-    parser = WebCrawlerParser()
+    domain = urlparse(url).netloc
+    parser = WebCrawlerParser(domain)
     parser.feed(str(page))
-    print_info('Links: ', parser.get_urls())
+    print_info('Internal URLs: ', parser.get_internal_urls())
+    print_info('External URLs: ', parser.get_external_urls())
     print_info('Images: ', parser.get_images())
 
 if __name__ == "__main__":
