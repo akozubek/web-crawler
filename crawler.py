@@ -48,7 +48,7 @@ class WebCrawlerParser(HTMLParser):
         return WebsiteInfo(self.internal_urls, self.external_urls, self.images)
 
 def usage():
-    print('Usage: python3 crawler.py starting-url')
+    print('Usage: python3 crawler.py starting-url max-depth')
 
 def download(url):
     try: 
@@ -59,10 +59,20 @@ def download(url):
     data = response.read()
     return data
 
-def print_info(header, items):
-    print(header)
+def print_website_single_info(header, items):
+    print('\t', header)
     for element in sorted(items):
-        print('\t', element)
+        print('\t\t', element)
+
+def print_website_info(website_info):
+    print_website_single_info('Internal URLs: ', website_info.internal_urls)
+    print_website_single_info('External URLs: ', website_info.external_urls)
+    print_website_single_info('Images: ', website_info.images)
+
+def print_info(websites):
+    for website in sorted(websites.keys()):
+        print(website)
+        print_website_info(websites[website])
 
 def standardize_url(url, domain):
     parsed_url = urlparse(url)
@@ -92,9 +102,6 @@ def crawl_website(starting_url, domain, websites, current_depth, max_depth = 0):
     parser.feed(str(page))
     website_info = parser.get_website_info()
     websites[starting_url] = website_info
-    #print_info('Internal URLs: ', website_info.internal_urls)
-    #print_info('External URLs: ', website_info.external_urls)
-    #print_info('Images: ', website_info.images)
    
     if current_depth < max_depth:
         for internal_url in website_info.internal_urls:
@@ -104,17 +111,18 @@ def crawl_website(starting_url, domain, websites, current_depth, max_depth = 0):
 
 
 def main(): 
-    if len(sys.argv) <= 1:
+    if len(sys.argv) <= 2:
         usage()
         exit(1)
 
     # Arguments provided -> continue with download 
     url = sys.argv[1]
+    max_depth = int(sys.argv[2])
     domain = urlparse(url).netloc
-    websites = dict()
     url = standardize_url(url, domain)
-    crawl_website(url, domain, websites, 0, 1)
-
+    websites = dict()
+    crawl_website(url, domain, websites, 0, max_depth)
+    print_info(websites)
 
 if __name__ == "__main__":
     main()
