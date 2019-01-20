@@ -49,7 +49,11 @@ def usage():
     print('Usage: python3 crawler.py starting-url')
 
 def download(url):
-    response = urllib.request.urlopen(url)
+    try: 
+        response = urllib.request.urlopen(url)
+    except Exception as e:
+        print('Downloading from url', url, 'failed. Details:', str(e))
+        exit(1)
     data = response.read()
     return data
 
