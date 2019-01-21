@@ -29,4 +29,11 @@ The crawler outputs a simple site map to the standard output.
   to absolute URLs. The goal of the standardization it to visit each page only once (I assume that HTTP and HTTPS
   lead to the same website. This does not have to be true, but it's usually the case).
 
+## What could be done
+
+More things that could be done with more time:
+- Handle URLs with a path.
+- Better handling of static content (links to different file formats, handling CSS, JS files, etc.)
+- Better error handling.
+- More tests.
 
