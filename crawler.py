@@ -51,7 +51,7 @@ class WebCrawlerParser(HTMLParser):
         return WebsiteInfo(self.internal_urls, self.external_urls, self.images)
 
 def usage():
-    print('Usage: python3 crawler.py starting-url max-depth')
+    print('Usage: python3 crawler.py starting-url [max-depth]')
 
 def download(url):
     response = urllib.request.urlopen(url)
@@ -92,7 +92,7 @@ def is_link(url):
     return parsed_url.scheme in ('http', 'https')
 
 
-def crawl_website(starting_url, domain, websites, current_depth, max_depth = 0):
+def crawl_website(starting_url, domain, websites, current_depth, max_depth):
     print('Downloading', starting_url)
     try: 
         page = download(starting_url)
@@ -105,25 +105,30 @@ def crawl_website(starting_url, domain, websites, current_depth, max_depth = 0):
     website_info = parser.get_website_info()
     websites[starting_url] = website_info
    
-    if current_depth < max_depth:
+    if max_depth == 0 or current_depth < max_depth:
         for internal_url in website_info.internal_urls:
             standard_url = standardize_url(internal_url, domain)
             if is_link(standard_url) and standard_url not in websites.keys():
                 crawl_website(standard_url, domain, websites, current_depth+1, max_depth)
 
-
-def main(): 
-    if len(sys.argv) <= 2:
+def read_arguments(args):
+    if len(args) <= 1:
         usage()
         exit(1)
 
-    # Arguments provided -> continue with download 
-    url = sys.argv[1]
-    max_depth = int(sys.argv[2])
+    url = args[1]
+    max_depth = int(args[2]) if len(args) >= 3 else 0
+    return (url, max_depth)
+
+
+def main(): 
+    url, max_depth = read_arguments(sys.argv)
+
     domain = urlparse(url).netloc
     url = standardize_url(url, domain)
     websites = dict()
-    crawl_website(url, domain, websites, 0, max_depth)
+
+    crawl_website(url, domain, websites, 1, max_depth)
     print_info(websites)
 
 if __name__ == "__main__":
