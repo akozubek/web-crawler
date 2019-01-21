@@ -7,6 +7,7 @@ from urllib.parse import ParseResult
 import sys
 from html.parser import HTMLParser
 from collections import namedtuple
+import logging
 
 WebsiteInfo = namedtuple('WebsiteInfo', ['internal_urls', 'external_urls', 'images'])
 
@@ -91,13 +92,12 @@ def is_link(url):
     parsed_url = urlparse(url)
     return parsed_url.scheme in ('http', 'https')
 
-
 def crawl_website(starting_url, domain, websites, current_depth, max_depth):
-    print('Downloading', starting_url)
+    logging.info('Downloading ' + starting_url)
     try: 
         page = download(starting_url)
     except Exception as e:
-        print('Downloading from url', starting_url, 'failed. Details:', str(e), file=sys.stderr)
+        logging.error('Downloading from url ' + starting_url + 'failed. Details:' + str(e))
         return 
 
     parser = WebCrawlerParser(domain)
@@ -122,6 +122,7 @@ def read_arguments(args):
 
 
 def main(): 
+    logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s] %(message)s')
     url, max_depth = read_arguments(sys.argv)
 
     domain = urlparse(url).netloc
